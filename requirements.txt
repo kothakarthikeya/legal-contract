@@ -1,0 +1,10 @@
+fastapi==0.115.0
+uvicorn==0.32.0
+python-dotenv==1.0.1
+pinecone-client==5.0.1
+sentence-transformers==3.3.1
+PyPDF2==3.0.1
+pydantic==2.10.3
+langgraph==0.2.45
+langchain-core==0.3.21
+requests==2.32.3

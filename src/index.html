@@ -1,0 +1,1225 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contract Intelligence System</title>
+    <meta name="description" content="AI-powered contract analysis with multi-agent intelligence">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --bg-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --glass-bg: rgba(255, 255, 255, 0.95);
+            --text-main: #1f2937;
+            --text-light: #6b7280;
+            --success: #10b981;
+            --error: #ef4444;
+            --border-radius: 12px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-gradient);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+            color: var(--text-main);
+        }
+
+        .container {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border-radius: var(--border-radius);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            width: 100%;
+            max-width: 900px;
+            padding: 3rem;
+        }
+
+        /* Welcome Banner */
+        .welcome-banner {
+            display: none;
+            background: linear-gradient(to right, #4f46e5, #7c3aed);
+            color: white;
+            padding: 1.5rem;
+            border-radius: var(--border-radius);
+            margin-bottom: 2rem;
+            text-align: center;
+            animation: fadeIn 0.5s ease;
+            box-shadow: 0 4px 15px rgba(79, 70, 229, 0.2);
+        }
+
+        .welcome-banner.visible {
+            display: block;
+        }
+
+        .welcome-banner h2 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin: 0;
+            color: white;
+        }
+
+        /* Navbar */
+        .navbar {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 1rem;
+            gap: 1rem;
+        }
+
+        .user-chip {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 2.5rem;
+        }
+
+        h1 {
+            font-weight: 700;
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            color: #111827;
+        }
+
+        p.subtitle {
+            color: var(--text-light);
+            font-size: 1.1rem;
+        }
+
+        .upload-options {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        @media (max-width: 768px) {
+            .upload-options {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .option-card {
+            background: #fff;
+            border: 2px dashed #e5e7eb;
+            border-radius: var(--border-radius);
+            padding: 2rem;
+            text-align: center;
+            transition: all 0.2s ease;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 250px;
+        }
+
+        .option-card.file-drop-zone {
+            cursor: pointer;
+        }
+
+        .option-card:hover,
+        .option-card.drag-active {
+            border-color: var(--primary);
+            background: #fdfeff;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+        }
+
+        .icon-large {
+            font-size: 3.5rem;
+            color: #9ca3af;
+            margin-bottom: 1.5rem;
+            transition: color 0.2s;
+        }
+
+        .option-card:hover .icon-large {
+            color: var(--primary);
+        }
+
+        h3 {
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+
+        p.small {
+            font-size: 0.85rem;
+            color: var(--text-light);
+        }
+
+        .link-input-area {
+            width: 100%;
+            text-align: left;
+        }
+
+        .link-input-area label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 0.875rem;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-family: inherit;
+            margin-bottom: 1rem;
+            font-size: 0.95rem;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+
+        .btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.875rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            transition: background 0.2s;
+            font-size: 1rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn:hover {
+            background: var(--primary-hover);
+        }
+
+        .btn:disabled {
+            background: #cbd5e1;
+            cursor: not-allowed;
+        }
+
+        .file-preview {
+            margin-top: 1rem;
+            padding: 0.75rem;
+            background: #f3f4f6;
+            border-radius: 8px;
+            display: none;
+            align-items: center;
+            gap: 0.75rem;
+            width: 100%;
+        }
+
+        .file-preview.visible {
+            display: flex;
+        }
+
+        .file-icon {
+            color: var(--text-main);
+            font-size: 1.25rem;
+        }
+
+        .file-name {
+            font-weight: 500;
+            font-size: 0.9rem;
+            flex: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .remove-file {
+            color: var(--error);
+            cursor: pointer;
+            padding: 0.25rem;
+        }
+
+        .hidden-input {
+            display: none;
+        }
+
+        /* Result Area */
+        #result-area {
+            margin-top: 2rem;
+            background: #fff;
+            border-radius: var(--border-radius);
+            padding: 2rem;
+            border: 1px solid #e5e7eb;
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        #result-area.visible {
+            display: block;
+        }
+
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .html-content {
+            background: transparent;
+            color: inherit;
+            padding: 0;
+            border-radius: 0;
+            font-family: inherit;
+            overflow: visible;
+            max-height: none;
+            white-space: normal;
+        }
+
+        /* Feedback Section */
+        .feedback-card {
+            margin-top: 2rem;
+            background: #fff;
+            border-radius: var(--border-radius);
+            padding: 2.5rem;
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            display: none;
+            animation: fadeIn 0.4s ease;
+        }
+
+        .feedback-card.visible {
+            display: block;
+        }
+
+        .feedback-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .feedback-header i {
+            font-size: 2.5rem;
+            color: var(--primary);
+            margin-bottom: 1rem;
+        }
+
+        .feedback-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #111827;
+        }
+
+        .feedback-subtitle {
+            color: var(--text-light);
+            font-size: 0.95rem;
+            margin-top: 0.5rem;
+        }
+
+        .star-rating {
+            display: flex;
+            flex-direction: row-reverse;
+            justify-content: center;
+            gap: 0.75rem;
+            margin: 2rem 0;
+        }
+
+        .star-rating input {
+            display: none;
+        }
+
+        .star-rating label {
+            font-size: 2.5rem;
+            color: #e5e7eb;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .star-rating label:hover,
+        .star-rating label:hover~label,
+        .star-rating input:checked~label {
+            color: #fbbf24;
+            transform: scale(1.1);
+        }
+
+        .feedback-form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .feedback-form-group label {
+            display: block;
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+            color: #374151;
+        }
+
+        .feedback-textarea {
+            width: 100%;
+            min-height: 120px;
+            padding: 1rem;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 1rem;
+            resize: vertical;
+            transition: border-color 0.2s;
+        }
+
+        .feedback-textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
+        }
+
+        .feedback-success-state {
+            text-align: center;
+            padding: 2rem 0;
+        }
+
+        .feedback-success-state i {
+            font-size: 4rem;
+            color: var(--success);
+            margin-bottom: 1.5rem;
+        }
+
+        /* History Section */
+        .history-section {
+            margin-top: 3rem;
+            border-top: 1px solid #e5e7eb;
+            padding-top: 2rem;
+        }
+
+        .history-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .history-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .history-item {
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.2s;
+        }
+
+        .history-item:hover {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            transform: translateY(-1px);
+        }
+
+        .history-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .history-icon {
+            width: 40px;
+            height: 40px;
+            background: #f3f4f6;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary);
+        }
+
+        .history-details h4 {
+            font-size: 0.95rem;
+            color: #111827;
+            margin-bottom: 0.25rem;
+        }
+
+        .history-meta {
+            font-size: 0.8rem;
+            color: var(--text-light);
+            display: flex;
+            gap: 1rem;
+        }
+
+        .history-badge {
+            font-size: 0.75rem;
+            padding: 0.2rem 0.5rem;
+            background: #e0e7ff;
+            color: #4338ca;
+            border-radius: 9999px;
+            font-weight: 500;
+        }
+
+        /* Auth Modals */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(5px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            animation: fadeIn 0.2s ease;
+        }
+
+        .modal-overlay.visible {
+            display: flex;
+        }
+
+        .auth-card {
+            background: white;
+            padding: 2.5rem;
+            border-radius: 16px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+
+        .auth-card h2 {
+            margin-bottom: 1.5rem;
+            text-align: center;
+            font-size: 1.5rem;
+        }
+
+        .auth-toggle {
+            text-align: center;
+            margin-top: 1rem;
+            font-size: 0.9rem;
+            color: var(--text-light);
+        }
+
+        .auth-toggle span {
+            color: var(--primary);
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        /* Toast */
+        .toast-container {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            z-index: 100;
+        }
+
+        .toast {
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            background: white;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 0.75rem;
+            animation: slideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            min-width: 300px;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .toast.success {
+            border-left: 4px solid var(--success);
+        }
+
+        .toast.error {
+            border-left: 4px solid var(--error);
+        }
+
+        .toast i {
+            font-size: 1.25rem;
+        }
+
+        .toast.success i {
+            color: var(--success);
+        }
+
+        .toast.error i {
+            color: var(--error);
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .spinner {
+            width: 1.25rem;
+            height: 1.25rem;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 0.8s linear infinite;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Auth Modal -->
+    <div class="modal-overlay" id="authModal">
+        <div class="auth-card">
+            <h2 id="authTitle">Sign In</h2>
+            <div id="loginForm">
+                <div class="feedback-form-group">
+                    <label>Username</label>
+                    <input type="text" id="loginUsername" class="input-field" placeholder="Enter username">
+                </div>
+                <div class="feedback-form-group">
+                    <label>Password</label>
+                    <input type="password" id="loginPassword" class="input-field" placeholder="Enter password">
+                </div>
+                <button class="btn" id="loginBtnAction">Login</button>
+                <p class="auth-toggle">Don't have an account? <span onclick="toggleAuth('register')">Register</span></p>
+            </div>
+            <div id="registerForm" style="display: none;">
+                <div class="feedback-form-group">
+                    <label>Username</label>
+                    <input type="text" id="regUsername" class="input-field" placeholder="Choose username">
+                </div>
+                <div class="feedback-form-group">
+                    <label>Email</label>
+                    <input type="email" id="regEmail" class="input-field" placeholder="your@email.com">
+                </div>
+                <div class="feedback-form-group">
+                    <label>Password</label>
+                    <input type="password" id="regPassword" class="input-field" placeholder="Create password">
+                </div>
+                <button class="btn" id="regBtnAction">Register</button>
+                <p class="auth-toggle">Already have an account? <span onclick="toggleAuth('login')">Login</span></p>
+            </div>
+            <button class="btn" style="background: #f3f4f6; color: #4b5563; margin-top: 1rem;"
+                onclick="document.getElementById('authModal').classList.remove('visible')">Cancel</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="navbar">
+            <div id="userSection">
+                <button class="btn" style="width: auto; padding: 0.5rem 1rem; font-size: 0.85rem;" onclick="showAuth()">
+                    <i class="fa-solid fa-user"></i> Login / Register
+                </button>
+            </div>
+        </div>
+
+        <div id="welcomeBanner" class="welcome-banner">
+            <h2 id="welcomeText">Welcome back!</h2>
+        </div>
+
+        <header>
+            <h1>Contract Intelligence System</h1>
+            <p class="subtitle">AI-powered contract analysis with multi-agent intelligence</p>
+        </header>
+
+        <div class="upload-options">
+            <!-- File Upload Card -->
+            <div class="option-card file-drop-zone" id="dropZone">
+                <i class="fa-solid fa-cloud-arrow-up icon-large"></i>
+                <h3>Drag & Drop File</h3>
+                <p class="small">Supports .pdf, .docx, .ppt, .pptx, .jpg, .png</p>
+                <p class="small" style="margin-top: 5px; color: var(--primary);">or click to browse</p>
+                <input type="file" id="fileInput" class="hidden-input"
+                    accept=".pdf,.docx,.doc,.ppt,.pptx,.jpg,.jpeg,.png">
+
+                <div class="file-preview" id="filePreview">
+                    <i class="fa-solid fa-file-lines file-icon"></i>
+                    <span class="file-name" id="fileName">contract.pdf</span>
+                    <i class="fa-solid fa-xmark remove-file" id="removeFile"></i>
+                </div>
+
+                <button class="btn" id="uploadBtn" style="margin-top: 1.5rem; display: none;">
+                    Analyze Document
+                </button>
+            </div>
+
+            <!-- Link Submission Card -->
+            <div class="option-card">
+                <i class="fa-brands fa-google-drive icon-large"></i>
+                <div class="link-input-area">
+                    <label for="linkInput">Secure Link (Drive, WeTransfer)</label>
+                    <input type="url" id="linkInput" class="input-field" placeholder="https://drive.google.com/..."
+                        required>
+                    <button class="btn" id="linkBtn">
+                        Analyze Link
+                    </button>
+                    <p class="small" style="margin-top: 10px; text-align: center;">Public or shared links only</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Result Area -->
+        <div id="result-area">
+            <div class="result-header">
+                <h3><i class="fa-solid fa-chart-pie" style="margin-right: 8px; color: var(--primary);"></i> Analysis
+                    Report</h3>
+                <div style="display: flex; gap: 8px;">
+                    <button class="btn" id="downloadReportBtn"
+                        style="width: auto; padding: 0.5rem 1rem; font-size: 0.85rem; background: var(--success);">
+                        <i class="fa-solid fa-download"></i> Download
+                    </button>
+                    <button class="btn"
+                        style="width: auto; padding: 0.5rem 1rem; font-size: 0.85rem; background: #374151;"
+                        onclick="document.getElementById('result-area').classList.remove('visible')">Close</button>
+                </div>
+            </div>
+            <div class="html-content" id="jsonOutput"></div>
+        </div>
+
+        <!-- Feedback Card -->
+        <div id="feedback-card" class="feedback-card">
+            <div id="feedbackForm">
+                <div class="feedback-header">
+                    <i class="fa-solid fa-comment-dots"></i>
+                    <h2 class="feedback-title">Rate your Analysis</h2>
+                    <p class="feedback-subtitle">Your feedback helps us improve our contract intelligence engine.
+                    </p>
+                </div>
+
+                <div class="star-rating">
+                    <input type="radio" id="star5" name="rating" value="5"><label for="star5"><i
+                            class="fa-solid fa-star"></i></label>
+                    <input type="radio" id="star4" name="rating" value="4"><label for="star4"><i
+                            class="fa-solid fa-star"></i></label>
+                    <input type="radio" id="star3" name="rating" value="3"><label for="star3"><i
+                            class="fa-solid fa-star"></i></label>
+                    <input type="radio" id="star2" name="rating" value="2"><label for="star2"><i
+                            class="fa-solid fa-star"></i></label>
+                    <input type="radio" id="star1" name="rating" value="1"><label for="star1"><i
+                            class="fa-solid fa-star"></i></label>
+                </div>
+
+                <div class="feedback-form-group">
+                    <label for="feedbackComments">Detailed Review</label>
+                    <textarea class="feedback-textarea" id="feedbackComments"
+                        placeholder="What did you think of the analysis? Are the findings accurate?"></textarea>
+                </div>
+
+                <button class="btn" id="submitFeedbackBtn">
+                    <i class="fa-solid fa-paper-plane"></i> Submit Feedback & Review
+                </button>
+            </div>
+
+            <div id="feedbackSuccess" class="feedback-success-state" style="display: none;">
+                <i class="fa-solid fa-circle-check"></i>
+                <h2 class="feedback-title">Feedback Received!</h2>
+                <p class="feedback-subtitle">Thank you for helping us build better legal tools.</p>
+                <button class="btn" style="width: auto; margin-top: 1.5rem; background: #e5e7eb; color: #374151;"
+                    onclick="document.getElementById('feedback-card').classList.remove('visible')">
+                    Close
+                </button>
+            </div>
+        </div>
+
+        <!-- History Section -->
+        <div class="history-section">
+            <div class="history-header">
+                <h3><i class="fa-solid fa-clock-rotate-left" style="margin-right: 8px; color: var(--primary);"></i>
+                    Recent Uploads</h3>
+                <button class="btn"
+                    style="width: auto; padding: 0.4rem 0.8rem; font-size: 0.8rem; background: #f3f4f6; color: #4b5563;"
+                    id="refreshHistory">
+                    <i class="fa-solid fa-arrows-rotate"></i> Refresh
+                </button>
+            </div>
+            <div id="history-container">
+                <p style="text-align: center; color: var(--text-light); padding: 2rem;">Loading history...</p>
+            </div>
+            <div style="margin-top: 1rem; text-align: right;">
+                <a href="/download_feedback" target="_blank"
+                    style="font-size: 0.8rem; color: var(--primary); text-decoration: none; font-weight: 500;">
+                    <i class="fa-solid fa-download"></i> Export Analytics Feedback
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script>
+        // DOM Elements
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+        const filePreview = document.getElementById('filePreview');
+        const fileName = document.getElementById('fileName');
+        const removeFile = document.getElementById('removeFile');
+        const uploadBtn = document.getElementById('uploadBtn');
+        const linkBtn = document.getElementById('linkBtn');
+        const linkInput = document.getElementById('linkInput');
+        const resultArea = document.getElementById('result-area');
+        const jsonOutput = document.getElementById('jsonOutput');
+        const toastContainer = document.getElementById('toastContainer');
+        const authModal = document.getElementById('authModal');
+        const loginForm = document.getElementById('loginForm');
+        const registerForm = document.getElementById('registerForm');
+        const authTitle = document.getElementById('authTitle');
+        const userSection = document.getElementById('userSection');
+
+        let selectedFile = null;
+
+        const allowedExtensions = ['.pdf', '.docx', '.doc', '.ppt', '.pptx', '.jpg', '.jpeg', '.png'];
+        const maxFileSize = 20 * 1024 * 1024; // 20MB
+
+        // Toast notification
+        function showToast(message, type = 'success') {
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            const icon = type === 'success' ? 'fa-circle-check' : 'fa-circle-exclamation';
+            toast.innerHTML = `<i class="fa-solid ${icon}"></i> <span>${message}</span>`;
+
+            toastContainer.appendChild(toast);
+
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateY(20px)';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // Fetch history
+        async function fetchHistory() {
+            const historyContainer = document.getElementById('history-container');
+            try {
+                const response = await fetch('/history');
+                if (!response.ok) throw new Error('Failed to fetch history');
+
+                const data = await response.json();
+                const documents = data.documents || {};
+
+                const sortedDocs = Object.keys(documents).map(key => {
+                    const latestVersion = documents[key].versions[documents[key].versions.length - 1];
+                    return {
+                        name: key,
+                        ...latestVersion
+                    };
+                }).sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+                if (sortedDocs.length === 0) {
+                    historyContainer.innerHTML = `<p style="text-align: center; color: var(--text-light); padding: 2rem;">No uploads yet. Start by uploading a contract!</p>`;
+                    return;
+                }
+
+                let html = '<ul class="history-list">';
+                sortedDocs.forEach(doc => {
+                    const date = new Date(doc.timestamp).toLocaleString();
+                    const size = (doc.size / 1024).toFixed(1) + ' KB';
+
+                    let feedbackHtml = '';
+                    if (doc.feedback) {
+                        if (doc.feedback.rating) {
+                            feedbackHtml += '<div style="color: #fbbf24; font-size: 0.8rem; margin-top: 4px;">';
+                            for (let i = 1; i <= 5; i++) {
+                                feedbackHtml += `<i class="fa-${i <= doc.feedback.rating ? 'solid' : 'regular'} fa-star"></i>`;
+                            }
+                            feedbackHtml += '</div>';
+                        }
+                        if (doc.feedback.comments) {
+                            feedbackHtml += `<div style="font-size: 0.85rem; color: var(--text-light); font-style: italic; margin-top: 8px; border-left: 2px solid #e5e7eb; padding-left: 8px;">
+                                "${doc.feedback.comments}"
+                            </div>`;
+                        }
+                    }
+
+                    html += `
+                        <li class="history-item">
+                            <div class="history-info">
+                                <div class="history-icon">
+                                    <i class="fa-solid fa-file-contract"></i>
+                                </div>
+                                <div class="history-details">
+                                    <h4>${doc.original_name}</h4>
+                                    <div class="history-meta">
+                                        <span><i class="fa-solid fa-calendar-day"></i> ${date}</span>
+                                        <span><i class="fa-solid fa-weight-hanging"></i> ${size}</span>
+                                        <span class="history-badge">v${doc.version}</span>
+                                    </div>
+                                    ${feedbackHtml}
+                                </div>
+                            </div>
+                            <button class="btn" onclick="window.open('/download_report/${doc.doc_id}', '_blank')" 
+                                    style="width: auto; padding: 0.4rem 0.8rem; font-size: 0.8rem; background: #ecfdf5; color: #059669; border: 1px solid #10b981;">
+                                <i class="fa-solid fa-download"></i> Download
+                            </button>
+                        </li>
+                    `;
+                });
+                html += '</ul>';
+                historyContainer.innerHTML = html;
+            } catch (error) {
+                console.error('History Error:', error);
+                historyContainer.innerHTML = `<p style="text-align: center; color: var(--error); padding: 2rem;">Error loading history.</p>`;
+            }
+        }
+
+        function validateFile(file) {
+            const ext = "." + file.name.split('.').pop().toLowerCase();
+            if (!allowedExtensions.includes(ext)) {
+                showToast(`Invalid file type: ${ext}. Supported: PDF, Word, PowerPoint, Images.`, 'error');
+                return false;
+            }
+            if (file.size > maxFileSize) {
+                showToast(`File too large. Max size is 20MB.`, 'error');
+                return false;
+            }
+            return true;
+        }
+
+        function handleFile(file) {
+            if (validateFile(file)) {
+                selectedFile = file;
+                fileName.textContent = file.name;
+                filePreview.classList.add('visible');
+                uploadBtn.style.display = 'flex';
+            }
+        }
+
+        function resetFile() {
+            selectedFile = null;
+            fileInput.value = '';
+            filePreview.classList.remove('visible');
+            uploadBtn.style.display = 'none';
+        }
+
+        function setLoading(btn, isLoading) {
+            if (isLoading) {
+                const originalText = btn.innerHTML;
+                btn.dataset.originalText = originalText;
+                btn.innerHTML = `<div class="spinner"></div> Analyzing...`;
+                btn.disabled = true;
+            } else {
+                btn.innerHTML = btn.dataset.originalText || 'Analyze';
+                btn.disabled = false;
+            }
+        }
+
+        function resetFeedback() {
+            document.getElementById('feedbackForm').style.display = 'block';
+            document.getElementById('feedbackSuccess').style.display = 'none';
+            document.getElementById('feedbackComments').value = '';
+            const checkedRating = document.querySelector('input[name="rating"]:checked');
+            if (checkedRating) checkedRating.checked = false;
+        }
+
+        // Drag & Drop
+        dropZone.addEventListener('click', (e) => {
+            if (e.target !== removeFile && e.target !== uploadBtn && !uploadBtn.contains(e.target)) {
+                fileInput.click();
+            }
+        });
+
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('drag-active');
+        });
+
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('drag-active');
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('drag-active');
+            if (e.dataTransfer.files.length > 0) {
+                handleFile(e.dataTransfer.files[0]);
+            }
+        });
+
+        fileInput.addEventListener('change', () => {
+            if (fileInput.files.length > 0) {
+                handleFile(fileInput.files[0]);
+            }
+        });
+
+        removeFile.addEventListener('click', (e) => {
+            e.stopPropagation();
+            resetFile();
+        });
+
+        // Upload Logic
+        uploadBtn.addEventListener('click', async (e) => {
+            e.stopPropagation();
+            if (!selectedFile) return;
+
+            setLoading(uploadBtn, true);
+            showToast('Uploading and analyzing file...');
+            resultArea.classList.remove('visible');
+            document.getElementById('feedback-card').classList.remove('visible');
+            resetFeedback();
+
+            const formData = new FormData();
+            formData.append('file', selectedFile);
+
+            try {
+                const response = await fetch('/analyze_contract', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) throw new Error(await response.text());
+
+                const data = await response.text();
+                jsonOutput.innerHTML = data;
+                resultArea.classList.add('visible');
+                document.getElementById('feedback-card').classList.add('visible');
+                showToast('Analysis complete!', 'success');
+                fetchHistory();
+            } catch (error) {
+                showToast(error.message, 'error');
+            } finally {
+                setLoading(uploadBtn, false);
+            }
+        });
+
+        // Link Logic
+        linkBtn.addEventListener('click', async () => {
+            const url = linkInput.value.trim();
+            if (!url) {
+                showToast('Please enter a valid URL', 'error');
+                return;
+            }
+
+            setLoading(linkBtn, true);
+            showToast('Submitting link for analysis...');
+            resultArea.classList.remove('visible');
+            document.getElementById('feedback-card').classList.remove('visible');
+            resetFeedback();
+
+            const formData = new FormData();
+            formData.append('link_url', url);
+
+            try {
+                const response = await fetch('/analyze_contract', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) throw new Error(await response.text());
+
+                const data = await response.text();
+                jsonOutput.innerHTML = data;
+                resultArea.classList.add('visible');
+                document.getElementById('feedback-card').classList.add('visible');
+                showToast('Link analysis started!', 'success');
+                fetchHistory();
+            } catch (error) {
+                showToast(error.message, 'error');
+            } finally {
+                setLoading(linkBtn, false);
+            }
+        });
+
+        // Feedback Logic
+        const submitFeedbackBtn = document.getElementById('submitFeedbackBtn');
+        const feedbackComments = document.getElementById('feedbackComments');
+
+        submitFeedbackBtn.addEventListener('click', async () => {
+            const ratingInput = document.querySelector('input[name="rating"]:checked');
+            if (!ratingInput) {
+                showToast('Please select a rating', 'error');
+                return;
+            }
+
+            const docIdElement = document.getElementById('report-doc-id');
+            const docId = docIdElement ? docIdElement.dataset.id : 'unknown';
+            const rating = parseInt(ratingInput.value);
+            const comments = feedbackComments.value.trim();
+
+            setLoading(submitFeedbackBtn, true);
+
+            try {
+                const response = await fetch('/submit_feedback', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        doc_id: docId,
+                        rating: rating,
+                        comments: comments,
+                        timestamp: new Date().toISOString()
+                    })
+                });
+
+                if (!response.ok) throw new Error(await response.text());
+
+                showToast('Thank you for your feedback!', 'success');
+                document.getElementById('feedbackForm').style.display = 'none';
+                document.getElementById('feedbackSuccess').style.display = 'block';
+            } catch (error) {
+                showToast(error.message, 'error');
+            } finally {
+                setLoading(submitFeedbackBtn, false);
+            }
+        });
+
+        // Auth Functions
+        function showAuth() {
+            authModal.classList.add('visible');
+        }
+
+        function toggleAuth(type) {
+            if (type === 'register') {
+                loginForm.style.display = 'none';
+                registerForm.style.display = 'block';
+                authTitle.textContent = 'Create Account';
+            } else {
+                loginForm.style.display = 'block';
+                registerForm.style.display = 'none';
+                authTitle.textContent = 'Sign In';
+            }
+        }
+
+        async function handleLogin() {
+            const username = document.getElementById('loginUsername').value;
+            const password = document.getElementById('loginPassword').value;
+            if (!username || !password) return showToast('Fill all fields', 'error');
+
+            try {
+                const response = await fetch('/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    showToast('Welcome back, ' + username);
+                    localStorage.setItem('user', JSON.stringify({ username }));
+                    updateUserUI();
+                    authModal.classList.remove('visible');
+                } else {
+                    showToast(data.message, 'error');
+                }
+            } catch (e) { showToast('Login failed', 'error'); }
+        }
+
+        async function handleRegister() {
+            const username = document.getElementById('regUsername').value;
+            const email = document.getElementById('regEmail').value;
+            const password = document.getElementById('regPassword').value;
+            if (!username || !email || !password) return showToast('Fill all fields', 'error');
+
+            try {
+                const response = await fetch('/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, email, password })
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    showToast('Registration successful! Please login.');
+                    toggleAuth('login');
+                } else {
+                    showToast(data.message, 'error');
+                }
+            } catch (e) { showToast('Registration failed', 'error'); }
+        }
+
+        function updateUserUI() {
+            const user = JSON.parse(localStorage.getItem('user'));
+            const welcomeBanner = document.getElementById('welcomeBanner');
+            const welcomeText = document.getElementById('welcomeText');
+
+            if (user) {
+                userSection.innerHTML = `
+                    <div class="user-chip">
+                        <i class="fa-solid fa-circle-user"></i>
+                        <span>${user.username}</span>
+                        <i class="fa-solid fa-right-from-bracket" style="margin-left:8px; cursor:pointer;" onclick="logout()"></i>
+                    </div>
+                `;
+                welcomeText.innerHTML = `<i class="fa-solid fa-hand-wave" style="margin-right:10px;"></i> Welcome back, <span style="font-weight: 800; text-transform: capitalize;">${user.username}</span>!`;
+                welcomeBanner.classList.add('visible');
+            } else {
+                userSection.innerHTML = `
+                    <button class="btn" style="width: auto; padding: 0.5rem 1rem; font-size: 0.85rem;" onclick="showAuth()">
+                        <i class="fa-solid fa-user"></i> Login / Register
+                    </button>
+                `;
+                welcomeBanner.classList.remove('visible');
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('user');
+            updateUserUI();
+            showToast('Logged out');
+        }
+
+        document.getElementById('loginBtnAction').addEventListener('click', handleLogin);
+        document.getElementById('regBtnAction').addEventListener('click', handleRegister);
+
+        // Download logic
+        document.getElementById('downloadReportBtn').addEventListener('click', () => {
+            const docIdElement = document.getElementById('report-doc-id');
+            if (docIdElement) {
+                const docId = docIdElement.dataset.id;
+                window.open('/download_report/' + docId, '_blank');
+            } else {
+                showToast('Report ID not found', 'error');
+            }
+        });
+
+        // Initialize
+        updateUserUI();
+        fetchHistory();
+        document.getElementById('refreshHistory').addEventListener('click', fetchHistory);
+
+    </script>
+</body>
+
+</html>
