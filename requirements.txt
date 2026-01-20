@@ -1,13 +1,18 @@
-# Start Command: gunicorn -k uvicorn.workers.UvicornWorker src.main:app
+--extra-index-url https://download.pytorch.org/whl/cpu
+
 fastapi==0.115.0
 uvicorn==0.32.0
-python-dotenv==1.0.1
-pinecone-client==5.0.1
+gunicorn==23.0.0
+
+torch==2.2.2+cpu
 sentence-transformers==3.3.1
-PyPDF2==3.0.1
-pydantic==2.10.3
-langgraph==0.2.45
-langchain-core==0.3.21
-requests==2.32.3
-python-multipart>=0.0.9
-gunicorn>=20.1.0
+transformers==4.57.6
+
+numpy
+scikit-learn
+pydantic
+python-multipart
+python-dotenv
+PyPDF2
+requests
+pinecone-client
