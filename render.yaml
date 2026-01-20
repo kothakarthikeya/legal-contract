@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: contract-intelligence
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn -k uvicorn.workers.UvicornWorker src.main:app
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.10.12 # Specify a modern stable version
+      - key: PORT
+        value: 10000
+      # Add placeholder env vars for things your app needs, so you don't forget them in the dashboard
+      - key: OPENAI_API_KEY
+        sync: false # User must enter this in dashboard
+    autoDeploy: false

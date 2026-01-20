@@ -30,10 +30,16 @@ from src.auth_utils import create_user, verify_user
 app = FastAPI(title="Contract Intelligence System", version="1.0.0")
 
 # Use absolute paths
-_BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-UPLOAD_DIR = os.path.join(_BASE_DIR, "uploads")
-REPORT_DIR = os.path.join(_BASE_DIR, "reports")
-FEEDBACK_FILE = os.path.join(_BASE_DIR, "feedback.json")
+# Use absolute paths - verify structure for Render
+# src/main.py is in src/, so project root is one level up
+_SRC_DIR = os.path.dirname(os.path.abspath(__file__))
+_PROJECT_ROOT = os.path.dirname(_SRC_DIR)
+
+# Define paths relative to Project Root (not src)
+UPLOAD_DIR = os.path.join(_PROJECT_ROOT, "uploads")
+REPORT_DIR = os.path.join(_PROJECT_ROOT, "reports")
+FEEDBACK_FILE = os.path.join(_PROJECT_ROOT, "feedback.json")
+INDEX_PATH = os.path.join(_PROJECT_ROOT, "index.html")
 
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 os.makedirs(REPORT_DIR, exist_ok=True)
@@ -67,21 +73,18 @@ def save_feedback(feedback: Feedback):
 @app.get("/", response_class=HTMLResponse)
 async def read_root():
     """Serve the main HTML interface"""
-    # Try to find index.html in the project root (one level up from src)
-    project_root = os.path.dirname(_BASE_DIR)
-    root_index = os.path.join(project_root, "index.html")
-    
-    if os.path.exists(root_index):
-        index_path = root_index
-    else:
-        # Fallback to src/index.html if root one doesn't exist
-        index_path = os.path.join(_BASE_DIR, "index.html")
-        
-    if not os.path.exists(index_path):
-        return HTMLResponse(content="<h1>Error: index.html not found</h1>", status_code=404)
-        
-    with open(index_path, "r", encoding="utf-8") as f:
-        return f.read()
+    # Check Project Root first (standard deployment)
+    if os.path.exists(INDEX_PATH):
+        with open(INDEX_PATH, "r", encoding="utf-8") as f:
+            return f.read()
+            
+    # Fallback to src/index.html (old structure)
+    src_index = os.path.join(_SRC_DIR, "index.html")
+    if os.path.exists(src_index):
+        with open(src_index, "r", encoding="utf-8") as f:
+            return f.read()
+            
+    return HTMLResponse(content="<h1>Error: index.html not found. Please ensure it is in the project root.</h1>", status_code=404)
 
 @app.post("/register")
 async def register(user: UserAuth):
@@ -208,6 +211,7 @@ async def download_report(doc_id: str):
 
 if __name__ == "__main__":
     import uvicorn
-    print("Starting Contract Intelligence System at http://127.0.0.1:8000")
+    port = int(os.environ.get("PORT", 8000))
+    print(f"Starting Contract Intelligence System at http://0.0.0.0:{port}")
     print("Loading AI models... (this may take a minute)")
-    uvicorn.run(app, host="127.0.0.1", port=8000)
+    uvicorn.run(app, host="0.0.0.0", port=port)

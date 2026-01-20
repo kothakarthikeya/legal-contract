@@ -269,6 +269,21 @@ This project is configured to be deployment-ready.
      - Create a `.env` file with your API keys.
      - `users.db` will be automatically created when the server starts.
 
+## Deployment to Render
+
+This project includes a `render.yaml` configuration for easy deployment on Render.
+
+1. **Push your code to GitHub/GitLab.**
+2. **Create a New Blueprint Service on Render:**
+   - Go to your Render Dashboard.
+   - Click "New" -> "Blueprint".
+   - Connect your repository.
+   - Render will automatically detect `render.yaml`.
+   - Alternatively, Render will use the `Procfile` to determine the start command.
+3. **Configure Environment Variables:**
+   - You will be prompted to enter your API keys (`HF_TOKEN`, `PINECONE_API_KEY`, etc.) during setup as defined in `render.yaml`.
+
+
 
 ---
 
