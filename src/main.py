@@ -67,7 +67,19 @@ def save_feedback(feedback: Feedback):
 @app.get("/", response_class=HTMLResponse)
 async def read_root():
     """Serve the main HTML interface"""
-    index_path = os.path.join(_BASE_DIR, "index.html")
+    # Try to find index.html in the project root (one level up from src)
+    project_root = os.path.dirname(_BASE_DIR)
+    root_index = os.path.join(project_root, "index.html")
+    
+    if os.path.exists(root_index):
+        index_path = root_index
+    else:
+        # Fallback to src/index.html if root one doesn't exist
+        index_path = os.path.join(_BASE_DIR, "index.html")
+        
+    if not os.path.exists(index_path):
+        return HTMLResponse(content="<h1>Error: index.html not found</h1>", status_code=404)
+        
     with open(index_path, "r", encoding="utf-8") as f:
         return f.read()
 
