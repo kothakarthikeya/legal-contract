@@ -16,4 +16,5 @@ python-dotenv
 PyPDF2
 requests
 pinecone-client
-langgraph>=0.0.40
+
+langgraph==0.0.40
