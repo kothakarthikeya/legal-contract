@@ -30,24 +30,24 @@ from pydantic import BaseModel
 # -------------------------------------------------------------------
 # Path setup
 # -------------------------------------------------------------------
-# src/main.py -> project root is one level up
 _SRC_DIR = os.path.dirname(os.path.abspath(__file__))
 _PROJECT_ROOT = os.path.dirname(_SRC_DIR)
 sys.path.append(_PROJECT_ROOT)
 
 # -------------------------------------------------------------------
-# Internal utilities (SAFE imports – no ML here)
+# Internal utilities
 # -------------------------------------------------------------------
 from src.history_manager import HistoryManager
 from src.auth_utils import create_user, verify_user
 
 # -------------------------------------------------------------------
-# FastAPI app
+# FastAPI app instance
 # -------------------------------------------------------------------
 app = FastAPI(title="Contract Intelligence System", version="1.0.0")
+asgi_app = app  # ✅ This is what Gunicorn should point to
 
 # -------------------------------------------------------------------
-# Paths
+# Directories & files
 # -------------------------------------------------------------------
 UPLOAD_DIR = os.path.join(_PROJECT_ROOT, "uploads")
 REPORT_DIR = os.path.join(_PROJECT_ROOT, "reports")
@@ -58,15 +58,10 @@ os.makedirs(UPLOAD_DIR, exist_ok=True)
 os.makedirs(REPORT_DIR, exist_ok=True)
 
 # -------------------------------------------------------------------
-# Lazy-loaded workflow (CRITICAL FIX)
+# Lazy workflow (avoid OOM at startup)
 # -------------------------------------------------------------------
 workflow_app = None
-
 def get_workflow_app():
-    """
-    Lazily import LangGraph workflow to prevent
-    Render OOM during startup.
-    """
     global workflow_app
     if workflow_app is None:
         from src.workflows.graph import app as _workflow_app
@@ -111,104 +106,57 @@ async def read_root():
     if os.path.exists(INDEX_PATH):
         with open(INDEX_PATH, "r", encoding="utf-8") as f:
             return f.read()
-
     src_index = os.path.join(_SRC_DIR, "index.html")
     if os.path.exists(src_index):
         with open(src_index, "r", encoding="utf-8") as f:
             return f.read()
-
-    return HTMLResponse(
-        content="<h1>Error: index.html not found.</h1>",
-        status_code=404
-    )
+    return HTMLResponse(content="<h1>Error: index.html not found.</h1>", status_code=404)
 
 @app.post("/register")
 async def register(user: UserAuth):
     if not user.email:
-        return JSONResponse(
-            status_code=400,
-            content={"message": "Email is required"}
-        )
-
+        return JSONResponse(status_code=400, content={"message": "Email is required"})
     if create_user(user.username, user.email, user.password):
         return {"message": "User registered successfully"}
-
-    return JSONResponse(
-        status_code=400,
-        content={"message": "Username or email already exists"}
-    )
+    return JSONResponse(status_code=400, content={"message": "Username or email already exists"})
 
 @app.post("/login")
 async def login(user: UserAuth):
     if verify_user(user.username, user.password):
         return {"message": "Login successful", "username": user.username}
-
-    return JSONResponse(
-        status_code=401,
-        content={"message": "Invalid username or password"}
-    )
+    return JSONResponse(status_code=401, content={"message": "Invalid username or password"})
 
 @app.post("/analyze_contract")
-async def analyze_contract(
-    file: Optional[UploadFile] = File(None),
-    link_url: Optional[str] = Form(None)
-):
+async def analyze_contract(file: Optional[UploadFile] = File(None), link_url: Optional[str] = Form(None)):
     if not file and not link_url:
-        raise HTTPException(
-            status_code=400,
-            detail="Provide either a file or a link_url."
-        )
+        raise HTTPException(status_code=400, detail="Provide either a file or a link_url.")
 
     if link_url:
-        return HTMLResponse(
-            content=f"<div>Link received: {link_url}</div>"
-        )
+        return HTMLResponse(content=f"<div>Link received: {link_url}</div>")
 
-    allowed_extensions = {
-        ".pdf", ".doc", ".docx", ".ppt", ".pptx", ".jpg", ".jpeg", ".png"
-    }
-
+    allowed_extensions = {".pdf", ".doc", ".docx", ".ppt", ".pptx", ".jpg", ".jpeg", ".png"}
     ext = os.path.splitext(file.filename)[1].lower()
     if ext not in allowed_extensions:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Unsupported file type: {ext}"
-        )
+        raise HTTPException(status_code=400, detail=f"Unsupported file type: {ext}")
 
     file_id = str(uuid.uuid4())
-    file_path = os.path.join(
-        UPLOAD_DIR, f"{file_id}_{file.filename}"
-    )
+    file_path = os.path.join(UPLOAD_DIR, f"{file_id}_{file.filename}")
 
     try:
         content = await file.read()
         with open(file_path, "wb") as f:
             f.write(content)
-
         if os.path.getsize(file_path) == 0:
             os.remove(file_path)
-            raise HTTPException(
-                status_code=400,
-                detail="Uploaded file is empty."
-            )
+            raise HTTPException(status_code=400, detail="Uploaded file is empty.")
 
-        initial_state = {
-            "file_path": file_path,
-            "doc_id": file_id,
-        }
+        initial_state = {"file_path": file_path, "doc_id": file_id}
 
-        # 🔥 Lazy workflow execution
         workflow = get_workflow_app()
         final_state = workflow.invoke(initial_state)
+        report_html = final_state.get("final_report", "<div>Analysis failed.</div>")
 
-        report_html = final_state.get(
-            "final_report",
-            "<div>Analysis failed.</div>"
-        )
-
-        report_path = os.path.join(
-            REPORT_DIR, f"{file_id}.html"
-        )
+        report_path = os.path.join(REPORT_DIR, f"{file_id}.html")
         with open(report_path, "w", encoding="utf-8") as rf:
             rf.write(report_html)
 
@@ -217,10 +165,7 @@ async def analyze_contract(
     except Exception as e:
         import traceback
         traceback.print_exc()
-        return HTMLResponse(
-            content=f"<pre>{str(e)}</pre>",
-            status_code=500
-        )
+        return HTMLResponse(content=f"<pre>{str(e)}</pre>", status_code=500)
 
 @app.get("/history")
 async def get_history():
@@ -230,39 +175,25 @@ async def get_history():
 @app.post("/submit_feedback")
 async def submit_feedback(feedback: Feedback):
     hm = HistoryManager()
-    hm.add_feedback(
-        feedback.doc_id,
-        feedback.rating,
-        feedback.comments
-    )
+    hm.add_feedback(feedback.doc_id, feedback.rating, feedback.comments)
     save_feedback(feedback)
     return {"status": "success"}
 
 @app.get("/download_feedback")
 async def download_feedback():
     if os.path.exists(FEEDBACK_FILE):
-        return FileResponse(
-            FEEDBACK_FILE,
-            filename="feedback.json",
-            media_type="application/json"
-        )
+        return FileResponse(FEEDBACK_FILE, filename="feedback.json", media_type="application/json")
     return {"message": "No feedback available"}
 
 @app.get("/download_report/{doc_id}")
 async def download_report(doc_id: str):
-    report_path = os.path.join(
-        REPORT_DIR, f"{doc_id}.html"
-    )
+    report_path = os.path.join(REPORT_DIR, f"{doc_id}.html")
     if os.path.exists(report_path):
-        return FileResponse(
-            report_path,
-            filename=f"report_{doc_id}.html",
-            media_type="text/html"
-        )
+        return FileResponse(report_path, filename=f"report_{doc_id}.html", media_type="text/html")
     raise HTTPException(status_code=404, detail="Report not found")
 
 # -------------------------------------------------------------------
-# Local run only (NOT used by Render)
+# Local run only
 # -------------------------------------------------------------------
 if __name__ == "__main__":
     import uvicorn
