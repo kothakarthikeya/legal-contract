@@ -4,17 +4,21 @@ fastapi==0.115.0
 uvicorn==0.32.0
 gunicorn==23.0.0
 
+# 🔴 IMPORTANT: NumPy must be <2
+numpy<2.0
+
 torch==2.2.2+cpu
 sentence-transformers==3.3.1
 transformers==4.57.6
 
-numpy
 scikit-learn
+scipy
+
 pydantic
 python-multipart
 python-dotenv
 PyPDF2
 requests
-pinecone
 
-langgraph==0.0.40
+pinecone
+langgraph>=0.0.40
