@@ -4,16 +4,12 @@ fastapi==0.115.0
 uvicorn==0.32.0
 gunicorn==23.0.0
 
-# 🔴 IMPORTANT: NumPy must be <2
-numpy<2.0
-
 torch==2.2.2+cpu
 sentence-transformers==3.3.1
 transformers==4.57.6
 
+numpy==1.26.4
 scikit-learn
-scipy
-
 pydantic
 python-multipart
 python-dotenv
